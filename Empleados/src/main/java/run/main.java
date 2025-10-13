@@ -33,9 +33,10 @@ public class main {
         System.out.println("==================================================");
 
         Empleado empleado = new Empleado();
-        empleado.setNombre("Harry Bodan");
-        empleado.setCarrera("Ingenieria en Sistemas");
-        empleado.setEdad(21);
+        empleado.setId(1L);
+        empleado.setNombre("Yorleny Guerrero");
+        empleado.setCarrera("Sistemas");
+        empleado.setEdad(20);
         empleado.setCargo(cargo);
 
         EmpleadoDao daoEmpleado = new EmpleadoDao(em);

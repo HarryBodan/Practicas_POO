@@ -15,13 +15,82 @@ public class EmpleadoDao implements IEmpleado {
 
     @Override
     public Empleado guardar(Empleado empleado) {
-        if (empleado.getId() == null) {
+        try{
             em.getTransaction().begin();
-            em.persist(empleado);
+            Empleado administrado;
+            if (empleado.getId() == null) {
+                em.persist(empleado);
+                administrado = empleado;
+            }else{
+                administrado = em.merge(empleado);
+            }
             em.getTransaction().commit();
-            return empleado;
+            return administrado;
+        }catch(RuntimeException e){
+            if(em.getTransaction().isActive()){
+                em.getTransaction().rollback();
+            }
+            throw e;
         }
-        return em.merge(empleado);
+    }
+
+    @Override
+    public Boolean eliminar(Empleado empleado) {
+        if(empleado.getId() == null){
+            throw new IllegalArgumentException("No se puede eliminar el empleado sin ID");
+        }
+
+        try{
+            em.getTransaction().begin();
+            Empleado administrado = em.find(Empleado.class, empleado.getId());
+
+            if(administrado == null){
+                em.getTransaction().commit();
+                return false;
+            }
+
+            em.remove(administrado);
+            em.getTransaction().commit();
+            return true;
+
+        }catch (RuntimeException e){
+            if(em.getTransaction().isActive()){
+                em.getTransaction().rollback();
+            }
+            throw e;
+        }
+    }
+
+    @Override
+    public Empleado editar(Empleado empleado) {
+        if(empleado.getId() == null){
+            throw new IllegalArgumentException("No se puede editar el empleado sin ID");
+        }
+
+        try{
+            em.getTransaction().begin();
+            Empleado existente = em.find(Empleado.class, empleado.getId());
+
+            if(existente == null){
+                em.getTransaction().commit();
+                return null;
+            }
+
+            Empleado actualizado = em.merge(empleado);
+            em.getTransaction().commit();
+            return actualizado;
+
+        }catch (RuntimeException e){
+            if(em.getTransaction().isActive()){
+                em.getTransaction().rollback();
+            }
+            throw e;
+        }
+    }
+
+    @Override
+    public Empleado buscarPorId(Long id){
+        return (id==null) ? null : em.find(Empleado.class, id);
     }
 
     @Override

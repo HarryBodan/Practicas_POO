@@ -15,13 +15,81 @@ public class CargoDao implements ICargo {
 
     @Override
     public Cargo guardar(Cargo cargo) {
-        if (cargo.getId() == null) {
+        try {
             em.getTransaction().begin();
-            em.persist(cargo);
+            Cargo administrado;
+            if (cargo.getId() == null) {
+                em.persist(cargo);
+                administrado = cargo;
+            } else {
+                administrado = em.merge(cargo);
+            }
             em.getTransaction().commit();
-            return cargo;
+            return administrado;
+        } catch (RuntimeException e) {
+            if(em.getTransaction().isActive()){
+                em.getTransaction().rollback();
+            }
+            throw e;
         }
-        return em.merge(cargo);
+    }
+
+    @Override
+    public Boolean eliminar(Cargo cargo){
+        if(cargo.getId() == null){
+            throw new IllegalArgumentException("No se puede eliminar el cargo sin ID");
+        }
+
+        try{
+            em.getTransaction().begin();
+            Cargo administrado = em.find(Cargo.class, cargo.getId());
+
+            if(administrado != null){
+                em.getTransaction().commit();
+                return false;
+            }
+
+            em.remove(administrado);
+            em.getTransaction().commit();
+            return true;
+
+        }catch(RuntimeException e){
+            if(em.getTransaction().isActive()){
+                em.getTransaction().rollback();
+            }
+            throw e;
+        }
+    }
+
+    @Override
+    public Cargo editar(Cargo cargo){
+        if(cargo.getId() == null){
+            throw new IllegalArgumentException("No se puede editar el cargo sin ID");
+        }
+
+        try{
+            em.getTransaction().begin();
+            Cargo existente = em.find(Cargo.class, cargo.getId());
+
+            if(existente != null){
+                em.getTransaction().commit();
+                return null;
+            }
+
+            Cargo editado = em.merge(cargo);
+            em.getTransaction().commit();
+            return editado;
+
+        }catch (RuntimeException e){
+            if(em.getTransaction().isActive()){
+                em.getTransaction().rollback();
+            }
+            throw e;
+        }
+    }
+
+    public Cargo buscarPorId(Long id) {
+        return (id == null) ? null : em.find(Cargo.class, id);
     }
 
     @Override
